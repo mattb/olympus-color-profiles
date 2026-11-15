@@ -1,0 +1,853 @@
+{
+  "source_commit": "3b07d0bd9739afd85a2aa4f2735c6db9f45e9839",
+  "selected_files": [
+    ".gitattributes",
+    ".github/workflows/unit.yml",
+    ".gitignore",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "NOTICE.md",
+    "README.md",
+    "build-comparator.sh",
+    "docs/CLI-HELP.md",
+    "docs/compatibility.md",
+    "docs/developers/build-and-test.md",
+    "docs/developers/fresh-mac.md",
+    "docs/developers/release-validation.md",
+    "docs/developers/upstream-licensing-precedents.md",
+    "docs/install.md",
+    "docs/quickstart.md",
+    "docs/release-readiness.md",
+    "docs/users/fit-profiles.md",
+    "docs/users/lightroom.md",
+    "docs/users/render.md",
+    "docs/users/transfer-profiles.md",
+    "docs/users/troubleshooting.md",
+    "examples/datasets/README.md",
+    "examples/datasets/held-out.json",
+    "examples/datasets/selected-six.json",
+    "examples/datasets/warm-smoke.json",
+    "examples/settings/color-neutral.json",
+    "examples/settings/hsl-neutral.json",
+    "examples/settings/mono-neutral.json",
+    "legal/LICENSE-STATUS.md",
+    "legal/RELEASE-BLOCKERS.md",
+    "legal/THIRD-PARTY-NOTICES.md",
+    "legal/UNOFFICIAL-STATUS-AND-RISKS.md",
+    "legal/licenses/CC-BY-SA-4.0.txt",
+    "omfit",
+    "omrender",
+    "optimizer/LICENSE",
+    "optimizer/NOTICE.md",
+    "optimizer/README.md",
+    "optimizer/examples/README.md",
+    "optimizer/examples/held-out.json",
+    "optimizer/examples/selected-six.json",
+    "optimizer/examples/warm-smoke.json",
+    "optimizer/pyproject.toml",
+    "optimizer/recipes/ilford-hp5plus400.json",
+    "optimizer/recipes/ilford-hp5plus400.oes",
+    "optimizer/recipes/kodak-trix400.json",
+    "optimizer/recipes/kodak-trix400.oes",
+    "optimizer/recipes/lightroom/ATTRIBUTION.md",
+    "optimizer/recipes/lightroom/hp5.xmp",
+    "optimizer/recipes/lightroom/panf.xmp",
+    "optimizer/recipes/lightroom/penf-hsl-velvia-research.xmp",
+    "optimizer/recipes/lightroom/trix.xmp",
+    "optimizer/recipes/penf-panf-adobe-experimental.xmp",
+    "optimizer/src/omfit/__init__.py",
+    "optimizer/src/omfit/adobe.py",
+    "optimizer/src/omfit/adobe_renderer.py",
+    "optimizer/src/omfit/adobe_xmp.py",
+    "optimizer/src/omfit/benchmark.py",
+    "optimizer/src/omfit/bw_benchmark.py",
+    "optimizer/src/omfit/cli.py",
+    "optimizer/src/omfit/color.py",
+    "optimizer/src/omfit/core.py",
+    "optimizer/src/omfit/dataset.py",
+    "optimizer/src/omfit/dataset_integrity.py",
+    "optimizer/src/omfit/directional.py",
+    "optimizer/src/omfit/experimental.py",
+    "optimizer/src/omfit/lut.py",
+    "optimizer/src/omfit/model.py",
+    "optimizer/src/omfit/mono.py",
+    "optimizer/src/omfit/mono_model.py",
+    "optimizer/src/omfit/natural.oes",
+    "optimizer/src/omfit/observability.py",
+    "optimizer/src/omfit/polish.py",
+    "optimizer/src/omfit/relative.py",
+    "optimizer/src/omfit/renderer.py",
+    "optimizer/src/omfit/scoring.py",
+    "optimizer/src/omfit/scoring_experiments.py",
+    "optimizer/src/omfit/validate_benchmark.py",
+    "optimizer/tests/test_adobe_renderer.py",
+    "optimizer/tests/test_adobe_xmp.py",
+    "optimizer/tests/test_benchmark_resume.py",
+    "optimizer/tests/test_budget_policy.py",
+    "optimizer/tests/test_cache.py",
+    "optimizer/tests/test_color.py",
+    "optimizer/tests/test_comparison_geometry.py",
+    "optimizer/tests/test_core.py",
+    "optimizer/tests/test_dataset.py",
+    "optimizer/tests/test_dataset_integrity.py",
+    "optimizer/tests/test_experimental.py",
+    "optimizer/tests/test_lut.py",
+    "optimizer/tests/test_modes_color.py",
+    "optimizer/tests/test_mono_model.py",
+    "optimizer/tests/test_mono_search.py",
+    "optimizer/tests/test_observability.py",
+    "optimizer/tests/test_polish.py",
+    "optimizer/tests/test_registration.py",
+    "optimizer/tests/test_relative.py",
+    "optimizer/tests/test_scoring.py",
+    "optimizer/uv.lock",
+    "scripts/build-comparator.sh",
+    "scripts/build.sh",
+    "scripts/doctor.py",
+    "scripts/omrender",
+    "scripts/release-audit.py",
+    "scripts/test-native-rng.py",
+    "scripts/test-profile-readback.py",
+    "scripts/test-profile-transport.py",
+    "settings/hsl-neutral.json",
+    "settings/mono-batch.example.json",
+    "settings/mono-cyan3-reference.oes",
+    "settings/mono-cyan3.json",
+    "settings/mono-neutral-reference.oes",
+    "settings/mono-neutral.json",
+    "settings/mono-red3-reference.oes",
+    "settings/mono-red3-style.json",
+    "settings/mono-red3-style.oes",
+    "settings/mono-red3.json",
+    "settings/neutral.json",
+    "settings/reference-baseline.json",
+    "settings/reference-baseline.oes",
+    "settings/reference-sector0.json",
+    "settings/reference-sector0.oes",
+    "settings/sector0.json",
+    "src/camera_client_bootstrap.inc",
+    "src/camera_profile.inc",
+    "src/camera_profile_load.inc",
+    "src/compare_pixels.mm",
+    "src/desktop_pipeline.inc",
+    "src/gpu_backend.inc",
+    "src/mono_profile.inc",
+    "src/native_rng.inc",
+    "src/native_rng_fault_test.mm",
+    "src/omrender.mm",
+    "src/parameter_state.inc",
+    "src/profile_metadata.inc",
+    "tests/native_profile_download_mock.mm",
+    "tests/native_profile_upload_mock.mm",
+    "tests/test_launcher_help.py",
+    "tests/test_profile_contract.py",
+    "tests/test_release_audit.py"
+  ],
+  "excluded_files": [
+    "FRAMEWORK-ARCHITECTURE.md",
+    "OPEN-SOURCE-PLAN.md",
+    "build-oes-probe.sh",
+    "docs/CAMERA-FRAMEWORK-CATALOGUE.md",
+    "docs/CLEAN-HOME-VALIDATION.md",
+    "docs/COMMUNITY-PROFILE-FITTING.md",
+    "docs/DEFERRED.md",
+    "docs/FORWARD-TEST.md",
+    "docs/FRAMEWORK-BLIND-REVIEW.md",
+    "docs/GPU-FORWARD-VALIDATION.md",
+    "docs/GPU-PIXEL-GAPS.md",
+    "docs/GPU-RESULTS.md",
+    "docs/PERFORMANCE-PROTOCOL.md",
+    "docs/PROFILE-TRANSFER.md",
+    "docs/REPORT.md",
+    "docs/firmware-hsl.md",
+    "docs/instrumentation-gpu-factory-and-geometry.md",
+    "docs/open-source-review/CAMERA-USERS.md",
+    "docs/open-source-review/CLEANUP-MANIFEST.json",
+    "docs/open-source-review/DEVELOPERS-AND-FRESH-MAC.md",
+    "docs/open-source-review/HISTORY-SCREEN.json",
+    "docs/open-source-review/LEGAL-AND-LICENSES.md",
+    "docs/open-source-review/LEGAL-COUNTERREVIEW.md",
+    "docs/open-source-review/TRACKED-FILE-INVENTORY.json",
+    "docs/optimizer-review.md",
+    "evidence/artifact-identity.json",
+    "evidence/clean-home-independence.json",
+    "evidence/cli-final-negative-tests.json",
+    "evidence/cli-negative-tests.json",
+    "evidence/final-cli-acceptance.json",
+    "evidence/gpu/batch-preflight.json",
+    "evidence/gpu/build-identity.json",
+    "evidence/gpu/desktop-configuration.json",
+    "evidence/gpu/desktop-repeatability.json",
+    "evidence/gpu/desktop-timings.json",
+    "evidence/gpu/exact-matrix-batch.json",
+    "evidence/gpu/exact-matrix.json",
+    "evidence/gpu/gpu-isolation-and-controls.json",
+    "evidence/gpu/help-forward-test.json",
+    "evidence/gpu/native-dispatch-proof.json",
+    "evidence/gpu/penf-hsl.json",
+    "evidence/gpu/performance-pixels.json",
+    "evidence/gpu/performance.json",
+    "evidence/gpu/stale-binary-rejection.json",
+    "evidence/help-forward-test-checks.json",
+    "evidence/help-forward-test-repeat.json",
+    "evidence/hsl-summary.json",
+    "evidence/pipeline-exclusions.json",
+    "evidence/profile/architecture-blind-v2.json",
+    "evidence/profile/architecture-blind-verdict.json",
+    "evidence/profile/architecture-thread-coverage.json",
+    "evidence/profile/csv-all-destinations.json",
+    "evidence/profile/gpu-regression.json",
+    "evidence/profile/identity.json",
+    "evidence/profile/jpeg-native-profile-readback.json",
+    "evidence/profile/jpeg-repeat-pixels.json",
+    "evidence/profile/native-mock-summary.json",
+    "evidence/profile/negative-validation.json",
+    "evidence/profile/running-workspace-gate.json",
+    "evidence/profile/updater-runtime-methods.txt",
+    "evidence/stock-repeatability.json",
+    "evidence/stock-sector-perturbations.json",
+    "evidence/workspace-comparisons.json",
+    "instrumentation/README.md",
+    "instrumentation/export.mm",
+    "instrumentation/launch.sh",
+    "instrumentation/stage.py",
+    "instrumentation/trace.mm",
+    "instrumentation/usb_metadata.mm",
+    "legal/research-sources.json",
+    "legal/runtime-license-inventory.json",
+    "optimizer/.gitignore",
+    "optimizer/experiments/ADOBE-CAMERA-NATURAL.md",
+    "optimizer/experiments/ADOBE-RENDERING-OPTIONS.md",
+    "optimizer/experiments/CLASSIC-MONO23.md",
+    "optimizer/experiments/DECISIONS.md",
+    "optimizer/experiments/HSL-LIGHTROOM-REVIEW.md",
+    "optimizer/experiments/HSL-LIGHTROOM-VALIDATION.md",
+    "optimizer/experiments/KODACHROME-EQUAL-BUDGET.md",
+    "optimizer/experiments/LIGHTROOM-SIX-PRESETS.md",
+    "optimizer/experiments/LIGHTROOM-VALIDATION.md",
+    "optimizer/experiments/PANF-MONO.md",
+    "optimizer/experiments/TUNING-PLAN.md",
+    "optimizer/experiments/adobe-camera-natural-probe.json",
+    "optimizer/experiments/adobe-color-control-validation.json",
+    "optimizer/experiments/adobe-validation.json",
+    "optimizer/experiments/adobe-velvia-base-fit-comparison.json",
+    "optimizer/experiments/camera-six-profiles-confirmed.json",
+    "optimizer/experiments/classic-mono23-qualification.json",
+    "optimizer/experiments/hsl-lightroom-initial-qualification.json",
+    "optimizer/experiments/hsl-lightroom-process-comparison.json",
+    "optimizer/experiments/hsl-lightroom-process11-qualification.json",
+    "optimizer/experiments/hsl-lightroom-qualification-summary.json",
+    "optimizer/experiments/kodachrome-equal-budget-plan.json",
+    "optimizer/experiments/kodachrome-equal-budget-results.json",
+    "optimizer/experiments/lightroom-export-repeat-and-process-control.json",
+    "optimizer/experiments/lightroom-parity-exports-v5.json",
+    "optimizer/experiments/lightroom-parity-exports-v6.json",
+    "optimizer/experiments/lightroom-six-presets.json",
+    "optimizer/experiments/panf-mono-qualification.json",
+    "optimizer/experiments/qualification-summary.json",
+    "optimizer/recipes/lightroom/kodachrome25.xmp",
+    "optimizer/recipes/lightroom/kodachrome64.xmp",
+    "optimizer/recipes/lightroom/velvia50.xmp",
+    "optimizer/src/omfit/relative_benchmark.py",
+    "scripts/acceptance.py",
+    "scripts/validate-clean-home.py",
+    "scripts/validate-mono.py",
+    "scripts/validate-profile-transfer.py",
+    "src/analyze_difference.mm",
+    "src/batch_introspect.mm",
+    "src/batch_probe.mm",
+    "src/controls_metadata.mm",
+    "src/controls_perturbations.py",
+    "src/controls_probe.mm",
+    "src/controls_readback.mm",
+    "src/controls_resume.py",
+    "src/environment_probe.mm",
+    "src/gpu_eligibility.mm",
+    "src/gpu_helper_smoke.mm",
+    "src/gpu_metadata.mm",
+    "src/gpu_pipeline_smoke.mm",
+    "src/gpu_probe.mm",
+    "src/gpu_render_probe.mm",
+    "src/hsl_validation.py",
+    "src/low_probe.mm",
+    "src/oes_probe.mm",
+    "src/oes_settings.hpp",
+    "src/precision_probe.mm",
+    "src/precision_validation.py"
+  ],
+  "publication_cleared": false,
+  "legal_and_fresh_mac_gates": "See legal/RELEASE-BLOCKERS.md and docs/release-readiness.md",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "sha256": "fb297a144930f9059f7b350860d5dcab2b771d6345c72b3bfc20ed68ed70ef28"
+    },
+    {
+      "path": ".github/workflows/unit.yml",
+      "sha256": "621286f327afd9aebf40dc8b304348d770ece7994c71d2acb5e6f06587ed86b4"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "3ceb84955cb791297ac5c503bcb2c1737cd4fc560c4ddef66b87dd7571349a68"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "039c77c993ae674359871e8cf5617517478466a5ad35e1d1fd7ae017e47aa777"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "22c676b00705df1ce12e201ec0783ac6c7b6538dc879ce8482a69f55cd43283d"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "e68d2504d1b41b7da8072f84943375a1225b953b0dcf6aa756120eadf3c3f684"
+    },
+    {
+      "path": "NOTICE.md",
+      "sha256": "ab053e77c9aa46facd4babeb45592a9ffdd9afd95f8eca26d30e7d4d8a55d86c"
+    },
+    {
+      "path": "README.md",
+      "sha256": "2e4c44efbb80bfa7c2945dff4b948cd1fe99893c25f0c40efb1a069b07bd1e2e"
+    },
+    {
+      "path": "build-comparator.sh",
+      "sha256": "4c18575fed9324c58a395fa4c08fc300ade25832988174f3173e71029182bd2c"
+    },
+    {
+      "path": "docs/CLI-HELP.md",
+      "sha256": "51dc3fd9fac36a035c4326e9ed6c72ba28854057c4f5d7554df509a91c8bd4d8"
+    },
+    {
+      "path": "docs/compatibility.md",
+      "sha256": "2086538c51ea989cc915a890fd98ae9ee56e192299725e4b479c10571af659c3"
+    },
+    {
+      "path": "docs/developers/build-and-test.md",
+      "sha256": "4a41929b4615bfbc656cb6eecc153f02aa3c7ee01a36eeab60799ab427c4e7cf"
+    },
+    {
+      "path": "docs/developers/fresh-mac.md",
+      "sha256": "59df9a79714e99a225a9a40439b90bc69c4731d8c2d96dea1fc1c653185613d0"
+    },
+    {
+      "path": "docs/developers/release-validation.md",
+      "sha256": "40766392c832e1659b1e517f6690e57a4ea6e232291cccf451163ed6241977a0"
+    },
+    {
+      "path": "docs/developers/upstream-licensing-precedents.md",
+      "sha256": "a1054d6df118b463e54ed581b9d90506cd6214747db49d5bfcf3688cbec45cec"
+    },
+    {
+      "path": "docs/install.md",
+      "sha256": "f438f66ae8d6f1596feb41aa29c55c710dec09ae63355c56e27b74a8fa59e310"
+    },
+    {
+      "path": "docs/quickstart.md",
+      "sha256": "d0dd174aafe218754a5613ce200e890a94d8a5eff6a88511345d6569f88354f4"
+    },
+    {
+      "path": "docs/release-readiness.md",
+      "sha256": "828b4409b199e8d18581ab4bbc3770e9e5c0590e4d0fd82131e290bd54f73f72"
+    },
+    {
+      "path": "docs/users/fit-profiles.md",
+      "sha256": "fcdcea962fc2a0708069840dd5d3edb2d4c577979d71d31b5e8807507603ddd5"
+    },
+    {
+      "path": "docs/users/lightroom.md",
+      "sha256": "f9bdca70c68e1b36e051f9e0aace2bafa14d0cb6f3dfe6ae9f5e2218a22c60ee"
+    },
+    {
+      "path": "docs/users/render.md",
+      "sha256": "6bfe9619890083e7d6c3e5b7013c470d69833c8237cb125ed2e32a69a57a3c9a"
+    },
+    {
+      "path": "docs/users/transfer-profiles.md",
+      "sha256": "d18bb2a1d7bfa5fc8ba627bdcc82210223e4425fde51d6bfe4f9df1d2d708b8f"
+    },
+    {
+      "path": "docs/users/troubleshooting.md",
+      "sha256": "a6fc3dd2d6cad92923ce24a7e71d1fe2921a4d8cb41e995487d7a4ba620c0595"
+    },
+    {
+      "path": "examples/datasets/README.md",
+      "sha256": "89689cca5c721bca06e54701fc3b876201e8939027d0c45815feff7698277a05"
+    },
+    {
+      "path": "examples/datasets/held-out.json",
+      "sha256": "94e8ce15090d0d581540ea9675c53656496498f6c7d003756909a59222db2b99"
+    },
+    {
+      "path": "examples/datasets/selected-six.json",
+      "sha256": "68a63c698cc8863604f2b0d70ae24626495dd7dc26a506f3f8007e33283e387e"
+    },
+    {
+      "path": "examples/datasets/warm-smoke.json",
+      "sha256": "256c4de9b1478c90d9c35700aaeb30dd5543924b9c43ee9b3fe76ac69e00b5b8"
+    },
+    {
+      "path": "examples/settings/color-neutral.json",
+      "sha256": "427da4df61c787ed4dbb21adc36380ac4200c27f05471edf00cf7c7a5a6c30f5"
+    },
+    {
+      "path": "examples/settings/hsl-neutral.json",
+      "sha256": "0708110816d360f5f30d91610f59ec7aa89980eb81ca9fd208bd0e867916a439"
+    },
+    {
+      "path": "examples/settings/mono-neutral.json",
+      "sha256": "85818d66c0d26ea44225c07054055ef856fe607c509f7145ac50aea9aa40c3c7"
+    },
+    {
+      "path": "legal/LICENSE-STATUS.md",
+      "sha256": "ea402bfc0718f1e9172b1d19b4c811dec79691e232b894f3c1820b4323257631"
+    },
+    {
+      "path": "legal/RELEASE-BLOCKERS.md",
+      "sha256": "fea37ed95356a7e0576333808b4aec6281e567fe96ec6c04f7152f6c3834542e"
+    },
+    {
+      "path": "legal/THIRD-PARTY-NOTICES.md",
+      "sha256": "959bbb030c9607e226030a7a658960891dc7b8c85af1ef5a39b42a8dd88618e2"
+    },
+    {
+      "path": "legal/UNOFFICIAL-STATUS-AND-RISKS.md",
+      "sha256": "34b5abb82793c204e86091f19675538aabfff5cff3564db158e0d44daac58596"
+    },
+    {
+      "path": "legal/licenses/CC-BY-SA-4.0.txt",
+      "sha256": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5"
+    },
+    {
+      "path": "omfit",
+      "sha256": "9476dc64a0099452e69c0f5f743c252ba03870898364d1a9854f478237dfc016"
+    },
+    {
+      "path": "omrender",
+      "sha256": "7747b026a0be5aff50f4db481354ca096f2f7fe6756a7c46a88f30dca9b3724b"
+    },
+    {
+      "path": "optimizer/LICENSE",
+      "sha256": "e68d2504d1b41b7da8072f84943375a1225b953b0dcf6aa756120eadf3c3f684"
+    },
+    {
+      "path": "optimizer/NOTICE.md",
+      "sha256": "110a390043f3ed51f77fc3b867644eda9424094c29dce310b9462fe5e3b3f1bf"
+    },
+    {
+      "path": "optimizer/README.md",
+      "sha256": "fcb450d5160800855557be9afc29f94669dd954d9a028ef38e4b492506d45e62"
+    },
+    {
+      "path": "optimizer/examples/README.md",
+      "sha256": "89689cca5c721bca06e54701fc3b876201e8939027d0c45815feff7698277a05"
+    },
+    {
+      "path": "optimizer/examples/held-out.json",
+      "sha256": "94e8ce15090d0d581540ea9675c53656496498f6c7d003756909a59222db2b99"
+    },
+    {
+      "path": "optimizer/examples/selected-six.json",
+      "sha256": "68a63c698cc8863604f2b0d70ae24626495dd7dc26a506f3f8007e33283e387e"
+    },
+    {
+      "path": "optimizer/examples/warm-smoke.json",
+      "sha256": "256c4de9b1478c90d9c35700aaeb30dd5543924b9c43ee9b3fe76ac69e00b5b8"
+    },
+    {
+      "path": "optimizer/pyproject.toml",
+      "sha256": "2954b425d3ef9391429fa2d988893401bbf768edecd7ea18b2939cffde21b0f9"
+    },
+    {
+      "path": "optimizer/recipes/ilford-hp5plus400.json",
+      "sha256": "0092b732cc5f37f0defbcba2ce679c238ceb84e1743e468136cd4a15dde14083"
+    },
+    {
+      "path": "optimizer/recipes/ilford-hp5plus400.oes",
+      "sha256": "c97b1ed0294bf03a7a7093226a33feeaf41f43379e472fde99f5a7eff065386a"
+    },
+    {
+      "path": "optimizer/recipes/kodak-trix400.json",
+      "sha256": "4b14ca99efc2f68eec7fef303d30580e52e3047f8fa251a4e435e7f1411f7be7"
+    },
+    {
+      "path": "optimizer/recipes/kodak-trix400.oes",
+      "sha256": "fe968b945aaaf91b1f9d148286ca8082acabe2c250b00cf647d5644e8fb214a4"
+    },
+    {
+      "path": "optimizer/recipes/lightroom/ATTRIBUTION.md",
+      "sha256": "9cf56747c3f3d4f732f9e040d983a4c5448d8cf2f0afed597c032d09103c6bec"
+    },
+    {
+      "path": "optimizer/recipes/lightroom/hp5.xmp",
+      "sha256": "3ebde32ac2bb89c06592809775c7544501730b3fa909e0a911a6713b6a885fe2"
+    },
+    {
+      "path": "optimizer/recipes/lightroom/panf.xmp",
+      "sha256": "8f6f88163169ac05c4cead5d9ad19fe28d6057e14dad89787d6473d4fcdee569"
+    },
+    {
+      "path": "optimizer/recipes/lightroom/penf-hsl-velvia-research.xmp",
+      "sha256": "fd9ab8b40d8232aa14ef7d8001219be462816535b3083151ded7a77d0cceaa05"
+    },
+    {
+      "path": "optimizer/recipes/lightroom/trix.xmp",
+      "sha256": "6a71b94b621184347bd61fafa73754b2573e12e14fbf297f7a8668c35a058cf2"
+    },
+    {
+      "path": "optimizer/recipes/penf-panf-adobe-experimental.xmp",
+      "sha256": "603066f5185efbc5e7e4fbff6eefa7f405d61d0d8fb4fcf2fd74a972052d98fa"
+    },
+    {
+      "path": "optimizer/src/omfit/__init__.py",
+      "sha256": "bd182f1936d2a43d1776445eecb797728e45a2013f009847b8599f99c32ccf5c"
+    },
+    {
+      "path": "optimizer/src/omfit/adobe.py",
+      "sha256": "87f9fd3ce5d5c28b8fc85be1038f9e753cb420e1c2c4413432f894e5d966f052"
+    },
+    {
+      "path": "optimizer/src/omfit/adobe_renderer.py",
+      "sha256": "9dda6cc0526575b14a3c47eeaa8c56af0f38629d19701174be7b873d912179fe"
+    },
+    {
+      "path": "optimizer/src/omfit/adobe_xmp.py",
+      "sha256": "038e11b1eba1a1f9cceda3068443c462f84e9571acabdb58c7c195af8ddaf8b8"
+    },
+    {
+      "path": "optimizer/src/omfit/benchmark.py",
+      "sha256": "6d093b899f3c3cbdf1a6ac03120116a45cfbb9aedaa21f55b2dd758102677e5f"
+    },
+    {
+      "path": "optimizer/src/omfit/bw_benchmark.py",
+      "sha256": "bd01e10d307fe24ae60f8b8c2f4d2b05837b6e06277a71266809e103a898c94d"
+    },
+    {
+      "path": "optimizer/src/omfit/cli.py",
+      "sha256": "71530529dd6980d8e158eed5ac2e17f63566a1ded3c8ad6946c4880bb5dccbec"
+    },
+    {
+      "path": "optimizer/src/omfit/color.py",
+      "sha256": "444e8980055401d4741dddcb46b218eb8569f93c92ed6c12879336b1bb3b56d3"
+    },
+    {
+      "path": "optimizer/src/omfit/core.py",
+      "sha256": "ec894b748eb04f18fc4ad6c461668d37c2328a267a3ebf41812544b31f0e37e6"
+    },
+    {
+      "path": "optimizer/src/omfit/dataset.py",
+      "sha256": "4a3854df65e948c9516d4728337a2b5d049eb1bdac054fa0064c96aec0f269e7"
+    },
+    {
+      "path": "optimizer/src/omfit/dataset_integrity.py",
+      "sha256": "71669228003a0ad66c629a74d33479aacffb7ecad4ecca1975cfd7321edab57c"
+    },
+    {
+      "path": "optimizer/src/omfit/directional.py",
+      "sha256": "eea491999b987c04b6e20c1275134ea62ee361ff113e2ad0a418db9e137d7a23"
+    },
+    {
+      "path": "optimizer/src/omfit/experimental.py",
+      "sha256": "b32fcec84b8657955d817af6d970de12ccc9b7de5b236fbcbd4d47e126c4b6eb"
+    },
+    {
+      "path": "optimizer/src/omfit/lut.py",
+      "sha256": "25d5976ca69c727ea3f09b3746039be8d72e1d2de527f613ea35ff03a847e366"
+    },
+    {
+      "path": "optimizer/src/omfit/model.py",
+      "sha256": "685620f19a097c1706046ed0cf05c587faf4b075c5b56551c1e9f8ed5ce5a941"
+    },
+    {
+      "path": "optimizer/src/omfit/mono.py",
+      "sha256": "ed3ea843ba56c94d6f7bfa95d32a02c97ac3a6ad928866f5bd46a573e6a0d0c2"
+    },
+    {
+      "path": "optimizer/src/omfit/mono_model.py",
+      "sha256": "8b8303be3478dd17fee2be101acb1c8f6ed729774b8055fecdadac02b03c258f"
+    },
+    {
+      "path": "optimizer/src/omfit/natural.oes",
+      "sha256": "183b94b46a957726b537e441a32de1c29948c7c6d59a9a60006ea5e58ab1157f"
+    },
+    {
+      "path": "optimizer/src/omfit/observability.py",
+      "sha256": "0babc6d91b6689d54646c00f89182d8ce6fe2a80a2f5d8fce6f7922d53dccb42"
+    },
+    {
+      "path": "optimizer/src/omfit/polish.py",
+      "sha256": "3270d2ab1b68f5a0fde1f8ea4e592e4b612ef47510b256bdd468cc7fa568864f"
+    },
+    {
+      "path": "optimizer/src/omfit/relative.py",
+      "sha256": "a8fd481b4f55c9812cbbc666b3664cbf7372a357975e87547d436e607de9dd2b"
+    },
+    {
+      "path": "optimizer/src/omfit/renderer.py",
+      "sha256": "53afa7354d7a0aa87f3bd272b0547fa579826f4838f7414bcae414792a03ff0f"
+    },
+    {
+      "path": "optimizer/src/omfit/scoring.py",
+      "sha256": "02d57eebbc2738c2216422dfac925d7cef5a95d21e4ec3348d0a22da96305117"
+    },
+    {
+      "path": "optimizer/src/omfit/scoring_experiments.py",
+      "sha256": "cd56781927732885d6d31d33b90bacc44373ce7b4840af7bd8ff44f7e5ae09a5"
+    },
+    {
+      "path": "optimizer/src/omfit/validate_benchmark.py",
+      "sha256": "d3792709c5c395fc6f6d95678119046c5f58b8d965b553002828edbba0b3f032"
+    },
+    {
+      "path": "optimizer/tests/test_adobe_renderer.py",
+      "sha256": "2b870f36d297d29b87c93d0d0bac13cf60ece642e23286ff8e2cac70f54b9754"
+    },
+    {
+      "path": "optimizer/tests/test_adobe_xmp.py",
+      "sha256": "d310c721e53a6a2bff4918ce3e3659d5b712ee0ada2a60ed03ea20c7b7e9af0d"
+    },
+    {
+      "path": "optimizer/tests/test_benchmark_resume.py",
+      "sha256": "67f7c163af8101ac6f450e0daff6d13c65c6afffd9107562db09d6bfe5103c0c"
+    },
+    {
+      "path": "optimizer/tests/test_budget_policy.py",
+      "sha256": "297cd9ea695fe9352d262b704abfd44b44f3434f34f3e6e00b6b3c0a9692a578"
+    },
+    {
+      "path": "optimizer/tests/test_cache.py",
+      "sha256": "0a81232d38c634761671ae549d4909571936b723acf24648f20a547b59ef9d43"
+    },
+    {
+      "path": "optimizer/tests/test_color.py",
+      "sha256": "56a25122f40a734d52a82afdf0d18d5af9bae089f8ee34a9c7e2f243cc9ff1aa"
+    },
+    {
+      "path": "optimizer/tests/test_comparison_geometry.py",
+      "sha256": "3c5882a4d59fc409ed7ec25c6b375669d27ceddc731bf816a3123d626bed7c46"
+    },
+    {
+      "path": "optimizer/tests/test_core.py",
+      "sha256": "a44df052106ab0cb0a947432cb031b88c2c9e922247aaaf7b78abeb96f58f4b4"
+    },
+    {
+      "path": "optimizer/tests/test_dataset.py",
+      "sha256": "49d908ec19be15d157ca82847b339f0d1a969aec9310183b1e9c40309f194a98"
+    },
+    {
+      "path": "optimizer/tests/test_dataset_integrity.py",
+      "sha256": "a6c9380653c62b68d40b72c44d9bca771d526b4931330deb99e1c2726aef1fbb"
+    },
+    {
+      "path": "optimizer/tests/test_experimental.py",
+      "sha256": "fce7f01f824556ff61a02913b161614c1417a9fd7e130fbb1ea56fcb4253ec7f"
+    },
+    {
+      "path": "optimizer/tests/test_lut.py",
+      "sha256": "41c61552365eb3ccda4fdc24cd5a9e23ef6387597b351b0c1b2de943642ae106"
+    },
+    {
+      "path": "optimizer/tests/test_modes_color.py",
+      "sha256": "d78be0c85c1747333c5c79b3510f5737052070ab634fca4e0847128c0861dc82"
+    },
+    {
+      "path": "optimizer/tests/test_mono_model.py",
+      "sha256": "e1024a2dc831e2850cbe73f45ecf2cdc24507743d902305a60835aaf2db6efa0"
+    },
+    {
+      "path": "optimizer/tests/test_mono_search.py",
+      "sha256": "2adbe43245fca75beca81d3821ccaf450e331fe7fb24e73caacc0d75c0e88c65"
+    },
+    {
+      "path": "optimizer/tests/test_observability.py",
+      "sha256": "69c1ef676642aa9a4eae7c452dd64bc3b14b5f068d7886cab5492d191d079d88"
+    },
+    {
+      "path": "optimizer/tests/test_polish.py",
+      "sha256": "f8af8130d6a9dd5c23e3383882b93ab933d05eba59a50842f41784ee21d925ce"
+    },
+    {
+      "path": "optimizer/tests/test_registration.py",
+      "sha256": "8e7f2af244b6440576b745d3f784964de3230ae167b66bc68ac35ae81af065db"
+    },
+    {
+      "path": "optimizer/tests/test_relative.py",
+      "sha256": "9910bd1573510d3b9e5c0719911f2897753fae72e66eb904f73726f4417e597f"
+    },
+    {
+      "path": "optimizer/tests/test_scoring.py",
+      "sha256": "d097d115a1177849dc578534041a6b587cfacb8beb93e1c969b5c9ae45cbbcc7"
+    },
+    {
+      "path": "optimizer/uv.lock",
+      "sha256": "37e04a07cb72c54202cd0e1c55d3d0d5b6cad8ff88046a76a1a13e7aaa4b2b01"
+    },
+    {
+      "path": "scripts/build-comparator.sh",
+      "sha256": "df5ea043fdaf44ba09f64e3a581b448a017501451ecb7b46dc9ce8d83757e69e"
+    },
+    {
+      "path": "scripts/build.sh",
+      "sha256": "2f5715af37b3ba8c4c550884a7bfa46ff12b7758a8e9c3136a7c14bc63a48480"
+    },
+    {
+      "path": "scripts/doctor.py",
+      "sha256": "67dcb6d58eeb7ad1363daa3d2e84abe4222c8f7ba9923ffa02745c03aa49defa"
+    },
+    {
+      "path": "scripts/omrender",
+      "sha256": "4ef162395c01ec1c6bd778cfa54aeb13b6174193a716257b913ad59907468499"
+    },
+    {
+      "path": "scripts/release-audit.py",
+      "sha256": "77f186e9a46cf8e58d9b011df6ebace2e2facc293ded2caedf4053916671b6aa"
+    },
+    {
+      "path": "scripts/test-native-rng.py",
+      "sha256": "bf08e89ec6770e62c1bc9060325618e291063847a2e531b2f4959c40e7142f14"
+    },
+    {
+      "path": "scripts/test-profile-readback.py",
+      "sha256": "3ea521ef8b188caed67e0c8ce6e5d0755d11968cc37f0dab564642e0fbd31b4e"
+    },
+    {
+      "path": "scripts/test-profile-transport.py",
+      "sha256": "e043f3ed3eee75a4f1053590fd6d893031d4476fa435187ea59aaf24e25d6c61"
+    },
+    {
+      "path": "settings/hsl-neutral.json",
+      "sha256": "0708110816d360f5f30d91610f59ec7aa89980eb81ca9fd208bd0e867916a439"
+    },
+    {
+      "path": "settings/mono-batch.example.json",
+      "sha256": "24dfe1de279fa9874689ea4930003bc7e8b5ffa95884ca06dc8a2cdb057e9eda"
+    },
+    {
+      "path": "settings/mono-cyan3-reference.oes",
+      "sha256": "d92b1f0b90d91baa7bec59bce5a56c5c729c048e3f3ef75c3f786c0f51e3deb2"
+    },
+    {
+      "path": "settings/mono-cyan3.json",
+      "sha256": "d81c95d07d5c766caef47889977e5b56fad2aa61352e7d1911bd2e4c3601e5c2"
+    },
+    {
+      "path": "settings/mono-neutral-reference.oes",
+      "sha256": "1beb8b625d484fe3a3a2568f071b8c887bf7a84dde231ea7fb5058b64a5a61f6"
+    },
+    {
+      "path": "settings/mono-neutral.json",
+      "sha256": "70acb44d0e08b13d7cbd9cddb67d9db3e1a6c587f62fc872262e8373ced40e8b"
+    },
+    {
+      "path": "settings/mono-red3-reference.oes",
+      "sha256": "da5d0c74ca3dc3cd3ee4c825d0ceb0aac44cfa967ed5237325b1b7d53715d642"
+    },
+    {
+      "path": "settings/mono-red3-style.json",
+      "sha256": "0010ec470f9b379f2bb08ad479b05f523fcc29697168bf7344a056e787083c82"
+    },
+    {
+      "path": "settings/mono-red3-style.oes",
+      "sha256": "90463a27b6e9f7b04052758f2369faa4ad4a925a7c2ee8d2d2738c3538d52672"
+    },
+    {
+      "path": "settings/mono-red3.json",
+      "sha256": "29b5144d85381dd02fff98156a4b34ce0fd5b6cbd0a824c68b1fb8eae6378032"
+    },
+    {
+      "path": "settings/neutral.json",
+      "sha256": "427da4df61c787ed4dbb21adc36380ac4200c27f05471edf00cf7c7a5a6c30f5"
+    },
+    {
+      "path": "settings/reference-baseline.json",
+      "sha256": "f7bdb3fac58432e8d6247303003158dd0ea83127c1cc10fcb8bfcbd81e5967bf"
+    },
+    {
+      "path": "settings/reference-baseline.oes",
+      "sha256": "fc7608dcae1c19999f78f436de1ec83938fc5129341cd18f6a2a4a263bcdc809"
+    },
+    {
+      "path": "settings/reference-sector0.json",
+      "sha256": "7fbfa756f578dd1b1bf79f7395fa25979fb9be97b2766c8fb1b4bc4ba309dbd8"
+    },
+    {
+      "path": "settings/reference-sector0.oes",
+      "sha256": "1b9cc799de718ca2aa07826ef3c46c182e8b218fd2feec2728603d4f37c318bc"
+    },
+    {
+      "path": "settings/sector0.json",
+      "sha256": "f15f04638ac62f60ccfe5023ee96b3390a57e559e726b7c66d28ddb4d4c00b55"
+    },
+    {
+      "path": "src/camera_client_bootstrap.inc",
+      "sha256": "bc885560321695d6b597c55180132d79b672aef2d8a9f22f87d59bdd147230f2"
+    },
+    {
+      "path": "src/camera_profile.inc",
+      "sha256": "dc20e7c3c3e06619359b6133d55781b584b8098a5da7a9f45ed1fb4468cf9f25"
+    },
+    {
+      "path": "src/camera_profile_load.inc",
+      "sha256": "a5553af4c01ec40f927670c9225e1bf422403d236e6e775076835ba16da44cd9"
+    },
+    {
+      "path": "src/compare_pixels.mm",
+      "sha256": "1887d08aa60a2e56bffb854f77917336d129d5fc18a6042356ae0b3d5c00c119"
+    },
+    {
+      "path": "src/desktop_pipeline.inc",
+      "sha256": "ab0c12869f7e20466b953997f2b71edc24bcec21aabb250768506515a23299a9"
+    },
+    {
+      "path": "src/gpu_backend.inc",
+      "sha256": "28e63bf9c0d5c348f99e3ffcceb4a1fd9bb095de18cd60527f24f98d3fcccd68"
+    },
+    {
+      "path": "src/mono_profile.inc",
+      "sha256": "bc90900f4d06f661c5fd444b77ef4cc5c43738023c21adf3cd6db62cb851d5ff"
+    },
+    {
+      "path": "src/native_rng.inc",
+      "sha256": "41a585c18e7a2db461ead45904bd16313fe18ec3c0a74a6396166ec3dd44ca62"
+    },
+    {
+      "path": "src/native_rng_fault_test.mm",
+      "sha256": "4463282731afb08f6607bf9bf28af09f2ac3806110d16497518035b0e8d77e1b"
+    },
+    {
+      "path": "src/omrender.mm",
+      "sha256": "3c90d324e863b2e8d5205d71a545173955f009dce6ca9b6fdedefc99ff1c4dc5"
+    },
+    {
+      "path": "src/parameter_state.inc",
+      "sha256": "a23b8815b441105d415853e7b46813d3591fd30ba4cf48826dad69603e8097a3"
+    },
+    {
+      "path": "src/profile_metadata.inc",
+      "sha256": "940a05daeb9d0f776aad8b2a3163993b8f8e7a655450cc32bc04a528dc60010c"
+    },
+    {
+      "path": "tests/native_profile_download_mock.mm",
+      "sha256": "c0f4667dd6e5eb36631e028fd609b4402004289856920abea6389cb17e8968fc"
+    },
+    {
+      "path": "tests/native_profile_upload_mock.mm",
+      "sha256": "efda8490dae213ab92792f7e0c19dd0520b2e5e16d705ff9b40faf05a120f543"
+    },
+    {
+      "path": "tests/test_launcher_help.py",
+      "sha256": "6ef1253f168737eba2c2887468f6c58ffe2deb16e5a570fba7e72b864f67e446"
+    },
+    {
+      "path": "tests/test_profile_contract.py",
+      "sha256": "cf096e9714ef3abfecd755c34fa781c61f031d6a78fac9ec2417d41671506e7a"
+    },
+    {
+      "path": "tests/test_release_audit.py",
+      "sha256": "cbb999dac6cf383da6c156b72e21171f0dae0a19388cb84ffedf07be2691d118"
+    }
+  ],
+  "findings": [],
+  "status": "candidate_audit_passed"
+}

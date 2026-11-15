@@ -1,0 +1,431 @@
+#!/usr/bin/env python3
+"""Agent-facing launcher for the native installed Olympus renderer."""
+import argparse, copy, hashlib, json, os, pathlib, plistlib, subprocess, sys, time
+ROOT=pathlib.Path(__file__).resolve().parent
+DEFAULT_BUILD=ROOT/'.build/native'
+FRAMEWORKS='/Applications/OM Workspace.app/Contents/Frameworks'
+PROFILE_FRAMEWORKS='/Applications/OM Workspace.app/Contents/Helpers/OM Digital Camera Updater.app/Contents/Frameworks:'+FRAMEWORKS
+
+def native_environment(frameworks=FRAMEWORKS):
+    env=dict(os.environ)
+    # Release free allocator pages between persistent render jobs. These startup
+    # defaults affect only the owned child and preserve explicit caller overrides.
+    env.setdefault('MallocAggressiveMadvise','1')
+    env.setdefault('MallocLargeCache','0')
+    env.update(DYLD_FRAMEWORK_PATH=frameworks,DYLD_LIBRARY_PATH=frameworks)
+    return env
+
+def emit(x): print(json.dumps(x,indent=2,sort_keys=True))
+def die(msg,code=2): emit({'ok':False,'error':str(msg)}); raise SystemExit(code)
+def csv12(s):
+    try: a=[int(x) for x in s.split(',')]
+    except ValueError: raise argparse.ArgumentTypeError('twelve comma-separated integers required')
+    if len(a)!=12: raise argparse.ArgumentTypeError('exactly twelve sector values required')
+    return a
+
+def template(kind):
+    x={'schema':'omrender/1','inherit':'orf_shooting_parameters','decode_instructions':0,'backend':'auto',
+       'profile':{'kind':'firmware_hsl_research' if kind=='hsl' else 'stock_pen_f','mode':'manual','saturation':[0]*12},
+       'raw_overrides':{},'output':{'bits':16,'rotate':0}}
+    if kind=='hsl': x['profile'].update(hue=[0]*12,luminance=[0]*12)
+    if kind=='mono':x['profile']={'kind':'stock_pen_f_mono','mode':'manual','color_filter':{'color':'off','strength':0},'grain':'off','toning':'neutral','shading':0,'contrast':0,'sharpness':0}
+    return x
+
+def validate(s):
+    if not isinstance(s,dict): raise ValueError('settings must be a JSON object')
+    allowed={'schema','inherit','decode_instructions','profile','raw_overrides','output','oes_file','backend'}
+    if set(s)-allowed: raise ValueError('unknown settings keys: '+str(sorted(set(s)-allowed)))
+    if s.get('schema')!='omrender/1' or s.get('inherit')!='orf_shooting_parameters': raise ValueError('schema/inherit missing or invalid')
+    if s.get('backend','auto') not in ('auto','cpu','gpu'):raise ValueError('backend must be auto, cpu or gpu')
+    if s.get('decode_instructions')!=0: raise ValueError('only the validated desktop decode_instructions=0 is exposed')
+    p=s.get('profile',{})
+    if not isinstance(p,dict):raise ValueError('profile must be an object')
+    hsl=p.get('kind')=='firmware_hsl_research';mono=p.get('kind')=='stock_pen_f_mono'
+    if p.get('kind') not in ('stock_pen_f','firmware_hsl_research','stock_pen_f_mono'):raise ValueError('Unknown profile.kind')
+    if p.get('mode')!='manual':raise ValueError('profile.mode must be manual')
+    if mono:
+        required={'kind','mode','color_filter','grain','toning','shading','contrast','sharpness'}
+        if set(p)!=required:raise ValueError('MONO requires exactly '+str(sorted(required)))
+        f=p['color_filter']
+        if not isinstance(f,dict) or set(f)!={'color','strength'} or f['color'] not in ('off','red','orange','yellow','yellow-green','green','cyan','blue','magenta') or type(f['strength'])!=int or not 0<=f['strength']<=3:raise ValueError('MONO filter requires verified color and integer strength0..3')
+        if p['grain']!='off' or p['toning']!='neutral':raise ValueError('MONO initially supports grain off and neutral toning only')
+        for key,limit in (('shading',5),('contrast',2),('sharpness',2)):
+            if type(p[key])!=int or abs(p[key])>limit:raise ValueError(f'MONO {key} must be integer -{limit}..{limit}')
+    else:
+        if set(p)-{'kind','mode','saturation','hue','luminance'}:raise ValueError('Unknown profile keys')
+        for k in ['saturation']+(['hue','luminance'] if hsl else []):
+            values=p.get(k);limit=7 if hsl else 5
+            if not isinstance(values,list) or len(values)!=12 or any(type(v)!=int or abs(v)>limit for v in values):raise ValueError(f'{k} must contain twelve integers in [-{limit},{limit}]')
+        if not hsl and ('hue' in p or 'luminance' in p):raise ValueError('Stock COLOR neutralizes H/L; use hsl kind for explicit H/L')
+    o=s.get('output',{})
+    if not isinstance(o,dict):raise ValueError('output must be an object')
+    if set(o)-{'bits','rotate','resize'}: raise ValueError('unknown output keys')
+    if o.get('bits') not in (8,16) or o.get('rotate',0) not in (0,90,180,270): raise ValueError('output bits/rotate invalid')
+    if 'resize' in o and (not isinstance(o['resize'],list) or len(o['resize'])!=2 or any(type(v)!=int or v<1 or v>20000 for v in o['resize'])): raise ValueError('resize must be [width,height] positive integers <=20000')
+    overrides=s.get('raw_overrides',{})
+    if not isinstance(overrides,dict):raise ValueError('raw_overrides must be an object')
+    if mono and set(overrides)&{'finishing_mode','contrast','sharpness','global_saturation'}:raise ValueError('Explicit MONO profile owns family/contrast/sharpness; remove contradictory raw overrides')
+    lengths={'exposure_bias':{2},'custom_wb2':{3},'tone_control':{3,4},'contrast':{3},'sharpness':{3},'global_saturation':{3}}
+    scalar={'white_balance_mode','color_space_mode','finishing_mode','gradation_mode','noise_filter_setting_mode'}
+    for k,v in overrides.items():
+        if k in lengths:
+            if not isinstance(v,list) or len(v) not in lengths[k] or any(type(a)!=int for a in v): raise ValueError(f'raw_overrides.{k} invalid array')
+            if k=='exposure_bias' and (v[1]<=0 or abs(v[0]/v[1])>5 or any(a < -2147483648 or a > 2147483647 for a in v)): raise ValueError('exposure requires int32 numerator/positive denominator and +/-5EV maximum')
+            if k=='custom_wb2' and not (2000<=v[0]<=20000 and all(abs(a)<=7 for a in v[1:])): raise ValueError('custom_wb2 requires Kelvin2000..20000, AB/GM -7..7')
+            if k not in ('exposure_bias','custom_wb2') and (not 0<=v[0]<=65535 or any(a < -32768 or a>32767 for a in v[1:])): raise ValueError('raw override outside ABI integer bounds')
+            if k=='tone_control' and (v[0] not in (0,1) or any(abs(a)>7 for a in v[1:])):raise ValueError('tone_control requires mode0(shooting) or1(manual), values -7..7')
+        elif k in scalar:
+            if type(v)!=int or not 0<=v<=65535: raise ValueError(f'{k} requires uint16')
+        else: raise ValueError(f'unknown raw override {k}')
+    return s
+
+def require_profile_capability(settings,capability):
+    profile=settings['profile']
+    if profile['kind']=='stock_pen_f_mono':
+        if not capability.get('mono_profiles'):raise ValueError('Native binary lacks MONO support; build the current source or select a MONO-capable --build-dir')
+        rng=capability.get('creative_shading_rng',{})
+        if profile['shading'] and (rng.get('policy')!='fixed_native_startup_seed_per_pass' or not rng.get('restores_prior')):raise ValueError('Nonzero MONO shading requires native deterministic RNG control; rebuild the selected native binary')
+
+def bounded(cmd,log,timeout,rss_mb,env=None):
+    peak=0;start=time.monotonic()
+    with log.open('x') as f:
+        p=subprocess.Popen([str(a) for a in cmd],stdout=f,stderr=subprocess.STDOUT,env=env)
+        while p.poll() is None:
+            q=subprocess.run(['/bin/ps','-o','rss=','-p',str(p.pid)],capture_output=True,text=True)
+            try: peak=max(peak,int(q.stdout.strip() or 0)*1024)
+            except ValueError: pass
+            if peak>rss_mb*1024*1024 or time.monotonic()-start>timeout:
+                p.terminate()
+                try: p.wait(timeout=3)
+                except subprocess.TimeoutExpired: p.kill();p.wait()
+                raise RuntimeError(f'resource limit: peak_rss_bytes={peak}, elapsed={time.monotonic()-start:.1f}s; log={log}')
+            time.sleep(.2)
+    if p.returncode: raise RuntimeError(f'native exit {p.returncode}: '+log.read_text(errors='replace')[-4000:])
+    return {'peak_rss_bytes':peak,'elapsed_seconds':round(time.monotonic()-start,3)}
+
+def native_capabilities(build_dir):
+    binary=build_dir.expanduser()/'omrender'
+    if not binary.is_file():raise ValueError(f'Native renderer is missing at {binary}; run omrender build --build-dir "{build_dir}"')
+    v=subprocess.run([str(binary),'--capabilities'],capture_output=True,text=True,timeout=10,env=native_environment())
+    try:cap=json.loads(v.stdout)
+    except ValueError:raise ValueError('Native binary is obsolete; run omrender build with this --build-dir before rendering')
+    if v.returncode or cap.get('renderer_protocol')!='omrender-native/2':raise ValueError('Incompatible native binary; rebuild with omrender build')
+    return cap
+
+def profile_info(path,build_dir):
+    path=path.expanduser().resolve()
+    if not path.is_file() or path.suffix.lower() not in ('.jpg','.jpeg'):raise ValueError('profile input must be an existing JPEG')
+    if not native_capabilities(build_dir).get('profile_info'):raise ValueError('Native binary lacks profile inspection; rebuild with omrender build')
+    env=native_environment(PROFILE_FRAMEWORKS)
+    result=subprocess.run([str(build_dir.expanduser()/'omrender'),'--profile-info',str(path)],capture_output=True,text=True,timeout=15,env=env)
+    if result.returncode:raise ValueError('Native profile metadata inspection failed: '+result.stderr[-2000:])
+    data=json.loads(result.stdout);data['jpeg_sha256']=hashlib.sha256(path.read_bytes()).hexdigest()
+    return data
+
+
+def profile_plan(metadata,bank,slot):
+    mono=metadata.get('profile_family')=='mono'
+    if not metadata.get('stock_mono_transport_eligible' if mono else 'stock_wheel_transport_eligible'):raise ValueError('JPEG is not a verified supported stock COLOR or MONO profile carrier')
+    loader=metadata.get('native_camera_loader',{})
+    if not loader.get('accepted') or loader.get('would_adjust_parameters'):raise ValueError('Native camera loader rejected the JPEG or would adjust its recipe')
+    fields={}
+    for name in ('contrast','sharpness','shading'):
+        item=metadata[name]
+        if item['status']:raise ValueError('Native profile field unavailable: '+name)
+        if 'min' in item and not item['min']<=item['value']<=item['max']:raise ValueError('Native profile field outside its advertised range: '+name)
+        fields[name]=item['value']
+    tone=metadata['highlight_shadow_metadata'];mid=metadata['midtone_metadata']
+    if tone['status'] or mid['status']:raise ValueError('Native tone profile metadata unavailable')
+    fields.update(highlight=tone['bright'],shadow=tone['dark'],midtone=mid['value'])
+    if mono:
+        f=metadata['monochrome_filter'];fields.update(color_filter={'color':f['canonical_color'],'strength':f['strength']},grain='off',toning='neutral')
+    else:fields['saturation']=metadata['saturation']['values']
+    if any(abs(fields[k])>7 for k in ('highlight','shadow','midtone')):raise ValueError('Workspace would clamp tone to -7..7; refusing a changed camera recipe')
+    if bank not in ('current','c1','c2','c3','c4') or slot not in (1,2,3):raise ValueError('Explicit destination bank and family profile slot required')
+    return {'schema':'omrender-camera-profile-plan/1','jpeg':metadata['path'],'jpeg_sha256':metadata['jpeg_sha256'],
+        'destination':{'bank':bank,('mono_slot' if mono else 'color_slot'):slot},'profile_family':'mono' if mono else 'color','camera_profile':fields,
+        'hardware_operations':False,'camera_write_performed':False,'hsl_jpeg_transfer_supported':False,
+        'hsl_firmware_effect':('MONO transfer contains no COLOR hue/lightness or sector records.' if mono else 'The documented HSL firmware resets destination hue/lightness when loading a stock JPEG profile.'),
+        'excluded_from_transfer':['white_balance','development_exposure','output_icc_profile','noise_filter']+(['native_shading_rng_state'] if mono else []),
+        'source_finishing_mode':metadata['finishing_mode']['value'],
+        'validation':'Native JPEG metadata parsed; hardware support/write/readback not tested by this plan.'}
+
+
+def write_profile_csv(a):
+    metadata=profile_info(a.jpeg,a.build_dir);plan=profile_plan(metadata,a.bank,a.slot)
+    target=json.loads(a.target.expanduser().read_text())
+    if not isinstance(target,dict) or set(target)!={'model','firmware','serial','dial_myset_supported'}:raise ValueError('target JSON requires exactly model, firmware, serial, dial_myset_supported')
+    if target['model']!='PEN-F' or type(target['dial_myset_supported'])!=bool:raise ValueError('Only PEN-F target CSV is exposed; dial_myset_supported must be boolean')
+    for key in ('model','firmware','serial'):
+        value=target[key]
+        if not isinstance(value,str) or not value or any(c in value for c in ',\r\n'):raise ValueError('Invalid camera identity '+key)
+    out=a.output.expanduser().resolve()
+    if not out.parent.is_dir() or out.suffix.lower()!='.csv':raise ValueError('CSV output must have .csv extension and existing parent')
+    for suffix in ('','.json','.request.json','.log'):
+        if pathlib.Path(str(out)+suffix).exists():raise ValueError('CSV output artifact exists')
+    cap=native_capabilities(a.build_dir)
+    if not cap.get('camera_profile_csv'):raise ValueError('Native binary lacks camera CSV export; rebuild with omrender build')
+    request={'jpeg':str(a.jpeg.expanduser().resolve()),'target':target,'bank':a.bank,'slot':a.slot,'dial_myset_supported':target['dial_myset_supported']}
+    request_path=pathlib.Path(str(out)+'.request.json')
+    with request_path.open('x') as f:json.dump(request,f,indent=2);f.write('\n')
+    env=native_environment(PROFILE_FRAMEWORKS)
+    timing=bounded([a.build_dir.expanduser()/'omrender','--camera-profile-csv',request_path,out],pathlib.Path(str(out)+'.log'),30,1024,env)
+    report={**plan,'csv':str(out),'csv_sha256':hashlib.sha256(out.read_bytes()).hexdigest(),'target':target,'target_identity_verified_against_camera':False,'serializer':'installed OlyDCFWUpProfileMaker','hardware_operations':False,**timing}
+    with pathlib.Path(str(out)+'.json').open('x') as f:json.dump(report,f,indent=2);f.write('\n')
+    emit(report)
+
+
+def camera_csv_records(data):
+    import csv,io
+    text=data.decode('utf-8-sig')
+    records={};bank=None
+    for row in csv.reader(io.StringIO(text)):
+        if not row:continue
+        if row[0]=='1':
+            if len(row)<6:raise ValueError('Camera CSV attribute record incomplete')
+            bank=row[4];records.setdefault(bank,{})
+        elif row[0]=='2':
+            if bank is None or len(row)!=3:raise ValueError('Camera CSV parameter record malformed')
+            records[bank][row[1]]=row[2]
+        elif row[0]=='3':bank=None
+        else:raise ValueError('Native readback is not recognized settings CSV')
+    if not records:raise ValueError('Native readback has no settings CSV records')
+    return records
+
+def verify_camera_readback(expected,actual):
+    try:
+        wanted=camera_csv_records(expected);got=camera_csv_records(actual)
+        missing=[]
+        for bank,parameters in wanted.items():
+            for name,value in parameters.items():
+                if got.get(bank,{}).get(name)!=value:missing.append({'bank':bank,'parameter':name,'expected':value,'actual':got.get(bank,{}).get(name)})
+        return {'verified':not missing,'method':'exact expected native CSV parameter subset within matching setting banks','differences':missing}
+    except (ValueError,UnicodeError) as e:return {'verified':False,'reason':str(e),'method':'opaque native readback retained without assuming CSV format'}
+
+def verify_camera_preservation(expected,before,after):
+    try:
+        allowed=camera_csv_records(expected);old=camera_csv_records(before);new=camera_csv_records(after)
+        differences=[]
+        missing=[bank for bank in allowed if bank not in old or bank not in new]
+        for bank in set(old)|set(new):
+            for key in set(old.get(bank,{}))|set(new.get(bank,{})):
+                if key in allowed.get(bank,{}):continue
+                a=old.get(bank,{}).get(key);b=new.get(bank,{}).get(key)
+                if a!=b:differences.append({'bank':bank,'parameter':key,'before':a,'after':b})
+        return {'verified':not missing and not differences,'method':'all native CSV fields outside the exact upload payload must remain unchanged','missing_payload_banks':missing,'differences':differences}
+    except (ValueError,UnicodeError) as e:return {'verified':False,'reason':str(e)}
+
+def load_profile(a):
+    metadata=profile_info(a.jpeg,a.build_dir);plan=profile_plan(metadata,a.bank,a.slot)
+    family=metadata.get('profile_family','color')
+    if a.family is not None and a.family!=family:raise ValueError('Explicit --family differs from native JPEG profile family')
+    serial=a.expected_serial
+    if not serial or any(c in serial for c in ',\r\n'):raise ValueError('Expected camera serial must be explicit and contain no CSV separators')
+    backup=a.backup_dir.expanduser().resolve()
+    if not backup.parent.is_dir():raise ValueError('Backup parent directory must exist')
+    for suffix in ('','.request.json','.log','.home'):
+        if pathlib.Path(str(backup)+suffix).exists():raise ValueError('Camera load output artifact exists')
+    if a.timeout<=0 or a.max_rss_mb<256:raise ValueError('Invalid camera command resource limits')
+    cap=native_capabilities(a.build_dir)
+    if not cap.get('camera_profile_load'):raise ValueError('Native binary lacks camera profile loading; rebuild with omrender build')
+    if family=='mono' and not cap.get('camera_profile_load_mono'):raise ValueError('Native binary lacks MONO hardware transfer; rebuild')
+    if a.skip_backup and not cap.get('camera_profile_skip_backup'):raise ValueError('Native binary does not support skipping backup; rebuild it first')
+    request={'jpeg':metadata['path'],'expected_serial':serial,'bank':a.bank,'slot':a.slot,'backup_dir':str(backup),'jpeg_sha256':metadata['jpeg_sha256'],'skip_backup':a.skip_backup,'profile_family':family}
+    request_path=pathlib.Path(str(backup)+'.request.json')
+    with request_path.open('x') as f:json.dump(request,f,indent=2);f.write('\n')
+    private_home=pathlib.Path(str(backup)+'.home');private_home.mkdir()
+    env=native_environment(PROFILE_FRAMEWORKS);env['CFFIXED_USER_HOME']=str(private_home)
+    native_report=backup/'native-result.json'
+    try:timing=bounded([a.build_dir.expanduser()/'omrender','--camera-profile-load',request_path],pathlib.Path(str(backup)+'.log'),a.timeout,a.max_rss_mb,env)
+    except RuntimeError as e:
+        progress=backup/'progress.json'
+        result=json.loads(native_report.read_text()) if native_report.exists() else json.loads(progress.read_text()) if progress.exists() else {}
+        emit({**result,'ok':False,'error':str(e),'native_report':str(native_report),'request':str(request_path)});raise SystemExit(1)
+    result=json.loads(native_report.read_text())
+    verification=verify_camera_readback(pathlib.Path(result['payload']).read_bytes(),pathlib.Path(result['readback']).read_bytes())
+    result.update(ok=bool(result.get('uploaded') and verification['verified']),recipe_readback_verified=verification['verified'],readback_verification=verification,
+        source_plan=plan,source_jpeg_sha256=metadata['jpeg_sha256'],**timing)
+    if family=='mono':
+        preservation=verify_camera_preservation(pathlib.Path(result['payload']).read_bytes(),pathlib.Path(result['before_readback']).read_bytes(),pathlib.Path(result['readback']).read_bytes())
+        result.update(unrelated_settings_preservation=preservation,ok=result['ok'] and preservation['verified'])
+    result['native_phase']=result.get('phase')
+    result['phase']='completed_verified' if result['ok'] else 'completed_verification_failed'
+    result_path=backup/'result.json'
+    with result_path.open('x') as f:json.dump(result,f,indent=2);f.write('\n')
+    emit({**result,'report':str(result_path)})
+    if not result['ok']:raise SystemExit(3)
+
+
+def run_batch(a):
+    capability=native_capabilities(a.build_dir)
+    manifest=a.manifest.expanduser().resolve();jobs=json.loads(manifest.read_text());report=a.report.expanduser().resolve()
+    if not isinstance(jobs,list) or not jobs:raise ValueError('batch manifest must be a nonempty array of {input,settings,output}')
+    if not report.parent.is_dir():raise ValueError('report parent must exist')
+    for suffix in ('','.log','.effective-jobs.json'):
+        if pathlib.Path(str(report)+suffix).exists():raise ValueError('batch report artifact exists')
+    if a.timeout<=0 or a.max_rss_mb<256:raise ValueError('invalid resource limits')
+    staged=[];reserved={pathlib.Path(str(report)+suffix) for suffix in ('','.log','.effective-jobs.json')}
+    def resolve(p):
+        p=pathlib.Path(p).expanduser();return (p if p.is_absolute() else manifest.parent/p).resolve()
+    for j in jobs:
+        if not isinstance(j,dict) or set(j)!={'input','settings','output'} or any(not isinstance(v,str) for v in j.values()):raise ValueError('each job must have exactly input/settings/output path strings')
+        inp,sp,out=[resolve(j[k]) for k in ('input','settings','output')]
+        if not inp.is_file() or inp.suffix.lower()!='.orf':raise ValueError('batch input must be existing ORF')
+        if out.suffix.lower() not in ('.tif','.tiff') or not out.parent.is_dir():raise ValueError('batch output must be TIFF in existing directory')
+        artifacts=[pathlib.Path(str(out)+s) for s in ('','.json','.effective-settings.json')]
+        if any(p.exists() or p in reserved for p in artifacts):raise ValueError('batch output artifact exists or is duplicated')
+        reserved.update(artifacts)
+        settings=json.loads(sp.read_text());settings.setdefault('backend','auto')
+        if a.backend is not None:settings['backend']=a.backend
+        validate(settings);require_profile_capability(settings,capability)
+        if settings.get('oes_file'):
+            oes=pathlib.Path(settings['oes_file']).expanduser();oes=(oes if oes.is_absolute() else sp.parent/oes).resolve()
+            if not oes.is_file():raise ValueError('batch OES file missing')
+            settings['oes_file']=str(oes)
+        staged.append((inp,out,settings))
+    native_jobs=[]
+    for inp,out,settings in staged:
+        effective=pathlib.Path(str(out)+'.effective-settings.json')
+        with effective.open('x') as f:json.dump(settings,f,indent=2);f.write('\n')
+        native_jobs.append({'input':str(inp),'settings':str(effective),'output':str(out)})
+    effective_jobs=pathlib.Path(str(report)+'.effective-jobs.json')
+    with effective_jobs.open('x') as f:json.dump(native_jobs,f,indent=2);f.write('\n')
+    env=native_environment()
+    timing=bounded([a.build_dir.expanduser()/'omrender','--batch',effective_jobs],pathlib.Path(str(report)+'.log'),a.timeout,a.max_rss_mb,env)
+    reports=[json.loads(pathlib.Path(j['output']+'.json').read_text()) for j in native_jobs]
+    if any(r.get('renderer_protocol')!='omrender-native/2' for r in reports):raise ValueError('Batch renderer protocol verification failed')
+    result={'ok':True,'backends_used':[r['backend']['used'] for r in reports],'mode':'one_native_process_reusing_context','jobs':[{'output':j['output'],'report':j['output']+'.json'} for j in native_jobs],**timing}
+    with report.open('x') as f:json.dump(result,f,indent=2);f.write('\n')
+    emit(result)
+
+def main():
+    if len(sys.argv)>1 and sys.argv[1] in ('guide','--full-help'):
+        print((ROOT/'docs/CLI-HELP.md').read_text());return
+    if len(sys.argv)>1 and sys.argv[1]=='help':sys.argv[1:]=sys.argv[2:]+['--help']
+    parser=argparse.ArgumentParser(description='Installed Olympus RAW renderer and profile tools. Run omrender guide for the complete settings and agent reference.')
+    parser.add_argument('--full-help',action='store_true',help='print the complete reference (same as guide)')
+    sub=parser.add_subparsers(dest='command',required=True)
+    sub.add_parser('guide',help='complete settings and agent reference')
+    b=sub.add_parser('build');b.add_argument('--build-dir',type=pathlib.Path,default=DEFAULT_BUILD)
+    pl=sub.add_parser('camera-profile-load');pl.add_argument('jpeg',type=pathlib.Path);pl.add_argument('--bank',choices=['current','c1','c2','c3','c4'],required=True);pl.add_argument('--slot',type=int,choices=[1,2,3],required=True);pl.add_argument('--expected-serial',required=True);pl.add_argument('--backup-dir','--output-dir',dest='backup_dir',type=pathlib.Path,required=True);pl.add_argument('--skip-backup',action='store_true');pl.add_argument('--family',choices=['color','mono']);pl.add_argument('--build-dir',type=pathlib.Path,default=DEFAULT_BUILD);pl.add_argument('--timeout',type=float,default=180);pl.add_argument('--max-rss-mb',type=int,default=2048)
+    pc=sub.add_parser('camera-profile-csv');pc.add_argument('jpeg',type=pathlib.Path);pc.add_argument('--bank',choices=['current','c1','c2','c3','c4'],required=True);pc.add_argument('--slot',type=int,choices=[1,2,3],required=True);pc.add_argument('--target',type=pathlib.Path,required=True);pc.add_argument('--output',type=pathlib.Path,required=True);pc.add_argument('--build-dir',type=pathlib.Path,default=DEFAULT_BUILD)
+    pp=sub.add_parser('camera-profile-plan');pp.add_argument('jpeg',type=pathlib.Path);pp.add_argument('--bank',choices=['current','c1','c2','c3','c4'],required=True);pp.add_argument('--slot',type=int,choices=[1,2,3],required=True);pp.add_argument('--build-dir',type=pathlib.Path,default=DEFAULT_BUILD);pp.add_argument('--output',type=pathlib.Path)
+    pi=sub.add_parser('profile-info');pi.add_argument('jpeg',type=pathlib.Path);pi.add_argument('--build-dir',type=pathlib.Path,default=DEFAULT_BUILD)
+    cp=sub.add_parser('capabilities');cp.add_argument('--input',type=pathlib.Path);cp.add_argument('--build-dir',type=pathlib.Path,default=DEFAULT_BUILD)
+    i=sub.add_parser('inspect');i.add_argument('--build-dir',type=pathlib.Path,default=DEFAULT_BUILD)
+    t=sub.add_parser('settings');t.add_argument('--profile',choices=['stock','hsl','mono'],default='stock');t.add_argument('--output',type=pathlib.Path)
+    t.add_argument('--backend',choices=['auto','cpu','gpu'],default='auto')
+    q=sub.add_parser('batch');q.add_argument('manifest',type=pathlib.Path);q.add_argument('--report',type=pathlib.Path,required=True);q.add_argument('--build-dir',type=pathlib.Path,default=DEFAULT_BUILD);q.add_argument('--backend',choices=['auto','cpu','gpu']);q.add_argument('--timeout',type=float,default=600);q.add_argument('--max-rss-mb',type=int,default=2048)
+    v=sub.add_parser('validate');v.add_argument('settings',type=pathlib.Path)
+    c=sub.add_parser('compare');c.add_argument('reference',type=pathlib.Path);c.add_argument('candidate',type=pathlib.Path);c.add_argument('--build-dir',type=pathlib.Path,default=DEFAULT_BUILD)
+    for command in ('render','profile-jpeg'):
+        r=sub.add_parser(command);r.add_argument('input',type=pathlib.Path);r.add_argument('--settings',required=True,type=pathlib.Path);r.add_argument('--output',required=True,type=pathlib.Path);r.add_argument('--build-dir',type=pathlib.Path,default=DEFAULT_BUILD)
+        r.add_argument('--saturation',type=csv12);r.add_argument('--hue',type=csv12);r.add_argument('--luminance',type=csv12)
+        r.add_argument('--kelvin',type=int);r.add_argument('--ab',type=int);r.add_argument('--gm',type=int);r.add_argument('--exposure',type=str)
+        r.add_argument('--highlight',type=int);r.add_argument('--shadow',type=int);r.add_argument('--midtone',type=int)
+        r.add_argument('--bits',type=int,choices=[8,16]);r.add_argument('--rotate',type=int,choices=[0,90,180,270]);r.add_argument('--resize',type=int,nargs=2,metavar=('WIDTH','HEIGHT'))
+        r.add_argument('--backend',choices=['auto','cpu','gpu'])
+        r.add_argument('--timeout',type=float,default=120);r.add_argument('--max-rss-mb',type=int,default=2048)
+    if len(sys.argv)==1:parser.print_help();return
+    a=parser.parse_args()
+    if a.command=='build':
+        a.build_dir=a.build_dir.expanduser().resolve();subprocess.run([str(ROOT/'scripts/build.sh'),str(a.build_dir)],check=True);subprocess.run([str(ROOT/'scripts/build-comparator.sh'),str(a.build_dir)],check=True);return
+    if a.command=='inspect':
+        native_capabilities(a.build_dir)
+        app=pathlib.Path('/Applications/OM Workspace.app');p=plistlib.loads((app/'Contents/Info.plist').read_bytes())
+        emit({'app':str(app),'version':p['CFBundleVersion'],'main_architectures':subprocess.check_output(['lipo','-archs',str(app/'Contents/MacOS/OM Workspace')],text=True).strip(),'native_target':'arm64','validated_version':'2.5.0.2','engine_path':FRAMEWORKS+'/OlyImageProc_arm.framework/OlyImageProc_arm','UI_required':False,'build_dir':str(a.build_dir.expanduser().resolve()),'native_binary':str((a.build_dir.expanduser()/'omrender').resolve()),'native_sha256':hashlib.sha256((a.build_dir.expanduser()/'omrender').read_bytes()).hexdigest(),'capabilities':native_capabilities(a.build_dir)});return
+    if a.command=='capabilities':
+        cap=native_capabilities(a.build_dir)
+        if a.input:
+            if not cap.get('mono_profiles'):raise ValueError('Native binary lacks MONO capability query; rebuild')
+            env=native_environment()
+            query=subprocess.run([str(a.build_dir.expanduser()/'omrender'),'--mono-capabilities',str(a.input.expanduser().resolve())],capture_output=True,text=True,timeout=30,env=env)
+            if query.returncode:raise ValueError(query.stderr[-2000:])
+            cap['input_capabilities']=json.loads(query.stdout)
+        emit(cap);return
+    if a.command=='settings':
+        s=template(a.profile);s['backend']=a.backend
+        if a.output:
+            with a.output.expanduser().open('x') as f:json.dump(s,f,indent=2);f.write('\n')
+        else:emit(s)
+        return
+    if a.command=='compare':
+        p=subprocess.run([str(a.build_dir.expanduser()/'compare-pixels'),str(a.reference.expanduser()),str(a.candidate.expanduser())]);raise SystemExit(p.returncode)
+    if a.command=='batch':run_batch(a);return
+    if a.command=='profile-info':emit(profile_info(a.jpeg,a.build_dir));return
+    if a.command=='camera-profile-csv':write_profile_csv(a);return
+    if a.command=='camera-profile-load':load_profile(a);return
+    if a.command=='camera-profile-plan':
+        plan=profile_plan(profile_info(a.jpeg,a.build_dir),a.bank,a.slot)
+        if a.output:
+            with a.output.expanduser().open('x') as f:json.dump(plan,f,indent=2);f.write('\n')
+        emit(plan);return
+    s=json.loads(a.settings.expanduser().read_text())
+    if a.command=='validate':validate(s);emit({'ok':True,'settings':str(a.settings),'validation':'schema only; renderer capability and reference equality require rendering'});return
+    for k in ('saturation','hue','luminance'):
+        if getattr(a,k) is not None:s['profile'][k]=getattr(a,k)
+    o=s.setdefault('raw_overrides',{})
+    if a.kelvin is not None or a.ab is not None or a.gm is not None:
+        old=o.get('custom_wb2')
+        if old is None and a.kelvin is None:raise ValueError('--ab/--gm require --kelvin or an explicit custom_wb2 in settings')
+        old=old or [a.kelvin,0,0];o['custom_wb2']=[a.kelvin if a.kelvin is not None else old[0],a.ab if a.ab is not None else old[1],a.gm if a.gm is not None else old[2]];o['white_balance_mode']=4
+    if a.exposure is not None:
+        from fractions import Fraction
+        q=Fraction(a.exposure);o['exposure_bias']=[q.numerator,q.denominator]
+    if any(getattr(a,k) is not None for k in ('highlight','shadow','midtone')):
+        old=o.get('tone_control',[1,0,0,0]);o['tone_control']=[1,a.highlight if a.highlight is not None else old[1],a.shadow if a.shadow is not None else old[2],a.midtone if a.midtone is not None else old[3] if len(old)>3 else 0]
+    for k in ('bits','rotate','resize'):
+        if getattr(a,k) is not None:s['output'][k]=getattr(a,k)
+    if a.backend is not None:s['backend']=a.backend
+    s.setdefault('backend','auto')
+    profile_jpeg=a.command=='profile-jpeg'
+    if profile_jpeg:
+        if s.get('profile',{}).get('kind') not in ('stock_pen_f','stock_pen_f_mono'):raise ValueError('JPEG recipe export supports stock_pen_f and stock_pen_f_mono; HSL transfer requires a separate camera-settings path')
+        if a.bits is not None and a.bits!=8:raise ValueError('profile-jpeg writes native 8-bit JPEG; omit --bits or specify 8')
+        s.setdefault('output',{})['bits']=8
+    validate(s)
+    cap=native_capabilities(a.build_dir);require_profile_capability(s,cap)
+    if profile_jpeg and not cap.get('profile_jpeg'):raise ValueError('Native binary lacks profile JPEG export; rebuild with omrender build')
+    inp=a.input.expanduser().resolve();out=a.output.expanduser().resolve()
+    if inp.suffix.lower()!='.orf' or not inp.is_file():raise ValueError('input must be an existing ORF')
+    if out.suffix.lower() not in (('.jpg','.jpeg') if profile_jpeg else ('.tif','.tiff')):raise ValueError('output must be JPEG' if profile_jpeg else 'output must be TIFF')
+    if not out.parent.is_dir():raise ValueError('output parent must exist')
+    if a.timeout<=0 or a.max_rss_mb<256:raise ValueError('invalid resource limits')
+    for suffix in ('','.json','.log','.effective-settings.json','.profile.json'):
+        if pathlib.Path(str(out)+suffix).exists():raise ValueError(f'output artifact exists: {out}{suffix}')
+    if s.get('oes_file'):
+        oes=pathlib.Path(s['oes_file']).expanduser()
+        if not oes.is_absolute():oes=a.settings.expanduser().resolve().parent/oes
+        if not oes.is_file():raise ValueError('OES file missing')
+        s['oes_file']=str(oes.resolve())
+    effective=pathlib.Path(str(out)+'.effective-settings.json')
+    with effective.open('x') as f:json.dump(s,f,indent=2);f.write('\n')
+    env=native_environment()
+    native_command=[a.build_dir.expanduser()/'omrender']+(['--profile-jpeg'] if profile_jpeg else [])+[inp,effective,out]
+    timing=bounded(native_command,pathlib.Path(str(out)+'.log'),a.timeout,a.max_rss_mb,env)
+    report_data=json.loads(pathlib.Path(str(out)+'.json').read_text())
+    if report_data.get('renderer_protocol')!='omrender-native/2' or (s['backend']=='gpu' and report_data.get('backend',{}).get('used')!='gpu'):raise ValueError('Native backend/protocol verification failed')
+    result={'ok':True,'backend':report_data['backend'],'output':str(out),'report':str(out)+'.json','effective_settings':str(effective),**timing}
+    if profile_jpeg:
+        metadata=profile_info(out,a.build_dir)
+        if not metadata.get('stock_profile_transport_eligible') or not metadata['native_camera_loader']['accepted'] or metadata['native_camera_loader']['would_adjust_parameters']:raise ValueError('Exported JPEG failed native stock profile eligibility')
+        if s['profile']['kind']=='stock_pen_f_mono':
+            p=s['profile'];f=p['color_filter'];color='off' if f['strength']==0 or f['color']=='off' else f['color'];strength=0 if color=='off' else f['strength']
+            actual=metadata.get('monochrome_filter',{})
+            if metadata.get('profile_family')!='mono' or actual.get('canonical_color')!=color or actual.get('strength')!=strength or metadata['monochrome_grain']['value']!=0 or metadata['monochrome_toning']['value']!=1:raise ValueError('Exported JPEG differs from requested MONO filter/grain/toning')
+            for k in ('contrast','sharpness','shading'):
+                if metadata[k]['status'] or metadata[k]['value']!=p[k]:raise ValueError('Exported MONO JPEG differs from requested '+k)
+        elif metadata['native_camera_loader']['parameters']['saturation']!=s['profile']['saturation'] or metadata['saturation']['values']!=s['profile']['saturation']:raise ValueError('Exported JPEG differs from requested COLOR wheel')
+        tone=s['raw_overrides'].get('tone_control')
+        if tone and tone[0]==1:
+            actual=metadata['highlight_shadow_metadata']
+            if actual['status'] or [actual['bright'],actual['dark']]!=tone[1:3]:raise ValueError('Exported JPEG tone metadata differs from requested settings')
+            if len(tone)==4 and (metadata['midtone_metadata']['status'] or metadata['midtone_metadata']['value']!=tone[3]):raise ValueError('Exported JPEG midtone metadata differs from requested settings')
+        proof=pathlib.Path(str(out)+'.profile.json')
+        with proof.open('x') as f:json.dump(metadata,f,indent=2);f.write('\n')
+        result.update(profile_metadata=str(proof),profile=metadata)
+    emit(result)
+
+if __name__=='__main__':
+    try:main()
+    except (ValueError,RuntimeError,OSError,KeyError,TypeError,subprocess.CalledProcessError,subprocess.TimeoutExpired) as e:die(e,1)

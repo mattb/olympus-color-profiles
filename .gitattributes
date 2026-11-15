@@ -1,0 +1,2 @@
+# Preserve the official legal-code copy, including its terminal blank line.
+legal/licenses/CC-BY-SA-4.0.txt whitespace=-blank-at-eof

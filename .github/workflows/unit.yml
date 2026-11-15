@@ -1,0 +1,27 @@
+name: Vendor-independent tests
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  optimizer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install open-source prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y liblcms2-2 libimage-exiftool-perl
+          python -m pip install uv
+      - name: Install locked Python dependencies
+        run: uv sync --locked --project optimizer
+      - name: Run optimizer unit tests
+        run: uv run --locked --project optimizer python -m unittest discover -s optimizer/tests -v
+      - name: Validate source candidate policy
+        run: python scripts/release-audit.py --ref HEAD --output "$RUNNER_TEMP/source-candidate" > candidate-audit.json
+      - name: Run file-only CLI and release contracts
+        run: python -m unittest discover -s tests -v

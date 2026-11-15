@@ -1,0 +1,24 @@
+[project]
+name = "omfit"
+version = "0.1.0"
+description = "Deterministic stock and HSL PEN-F profile fitting through omrender"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE.md"]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "numpy==2.2.6",
+  "scipy==1.15.3",
+  "Pillow==11.2.1",
+  "scikit-image==0.25.2",
+  "opencv-python-headless==4.11.0.86",
+]
+
+[project.scripts]
+omfit = "omfit.cli:main"
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/omfit"]

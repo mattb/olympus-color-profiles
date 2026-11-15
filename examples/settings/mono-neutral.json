@@ -1,0 +1,36 @@
+{
+  "schema": "omrender/1",
+  "inherit": "orf_shooting_parameters",
+  "decode_instructions": 0,
+  "backend": "auto",
+  "profile": {
+    "kind": "stock_pen_f_mono",
+    "mode": "manual",
+    "color_filter": {
+      "color": "off",
+      "strength": 0
+    },
+    "grain": "off",
+    "toning": "neutral",
+    "shading": 0,
+    "contrast": 0,
+    "sharpness": 0
+  },
+  "raw_overrides": {
+    "exposure_bias": [
+      0,
+      3
+    ],
+    "tone_control": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "color_space_mode": 1
+  },
+  "output": {
+    "bits": 16,
+    "rotate": 0
+  }
+}

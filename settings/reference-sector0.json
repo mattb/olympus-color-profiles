@@ -1,0 +1,29 @@
+{
+  "schema": "omrender/1",
+  "inherit": "orf_shooting_parameters",
+  "decode_instructions": 0,
+  "profile": {
+    "kind": "stock_pen_f",
+    "mode": "manual",
+    "saturation": [
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "raw_overrides": {},
+  "output": {
+    "bits": 16,
+    "rotate": 270
+  },
+  "oes_file": "reference-sector0.oes"
+}

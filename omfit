@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
+if [ "${1-}" = "adobe" ]; then
+  shift
+  exec uv run --locked --quiet --project "$ROOT/optimizer" python -m omfit.adobe "$@"
+fi
+exec uv run --locked --quiet --project "$ROOT/optimizer" omfit "$@"

@@ -1,0 +1,51 @@
+{
+  "camera_firmware": "stock",
+  "finishing": "Natural",
+  "fitting_mode": "mono",
+  "physical_camera_validated": false,
+  "profile": {
+    "color_filter": {
+      "color": "blue",
+      "strength": 1
+    },
+    "contrast": 1,
+    "grain": "off",
+    "kind": "stock_pen_f_mono",
+    "mode": "manual",
+    "shading": 0,
+    "sharpness": 0,
+    "toning": "neutral"
+  },
+  "schema": "omfit-profile/2",
+  "scope": "shared_reusable_style",
+  "shading_policy": "fixed_zero",
+  "source_camera_models": [
+    "PEN-F"
+  ],
+  "tone_control": [
+    1,
+    6,
+    -1,
+    0
+  ],
+  "validation_status": "provisional",
+  "name": "Ilford HP5 Plus 400",
+  "prepared_destination": {
+    "bank": "current",
+    "family": "mono",
+    "slot": 3,
+    "uploaded": false
+  },
+  "reference": {
+    "lut": "olut_B09_rt",
+    "original_hald_file": "Black-and-White/Ilford/Ilford HP5 Plus 400.png",
+    "source_url": "https://huggingface.co/Norton0924/OpenSourceLuts/resolve/484c3c1fdc612082915e5876cd0450eb8a0d2431/luts/bw/olut_B09_rt.lut16",
+    "revision": "484c3c1fdc612082915e5876cd0450eb8a0d2431",
+    "cube_sha256": "00030dce2d817bbb8355ef9517002d50ad63d7e7593bb7c217f025644bd342df",
+    "license": "CC BY-SA 4.0",
+    "attribution": "RawTherapee Film Simulation Collection by Pat David, Pavlov Dmitry, Michael Ezra et al. \u00b7 Licensed CC BY-SA 4.0 \u00b7 Resampled by NicePhoto",
+    "qualification": "Community-documented artistic approximation; no measured emulsion validation established"
+  },
+  "camera_memory_upload_verified": true,
+  "camera_memory_upload_evidence": "../experiments/camera-six-profiles-confirmed.json"
+}

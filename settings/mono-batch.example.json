@@ -1,0 +1,22 @@
+[
+  {
+    "input": "/absolute/PEN-F.ORF",
+    "settings": "neutral.json",
+    "output": "/absolute/new-color.tif"
+  },
+  {
+    "input": "/absolute/PEN-F.ORF",
+    "settings": "mono-red3.json",
+    "output": "/absolute/new-mono-red3.tif"
+  },
+  {
+    "input": "/absolute/PEN-F.ORF",
+    "settings": "mono-cyan3.json",
+    "output": "/absolute/new-mono-cyan3.tif"
+  },
+  {
+    "input": "/absolute/PEN-F.ORF",
+    "settings": "mono-red3.json",
+    "output": "/absolute/new-mono-repeat.tif"
+  }
+]

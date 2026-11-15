@@ -1,0 +1,56 @@
+{
+  "schema": "omrender/1",
+  "inherit": "orf_shooting_parameters",
+  "decode_instructions": 0,
+  "profile": {
+    "kind": "firmware_hsl_research",
+    "mode": "manual",
+    "saturation": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "hue": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "luminance": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "raw_overrides": {},
+  "output": {
+    "bits": 16,
+    "rotate": 0
+  }
+}

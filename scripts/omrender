@@ -1,0 +1,7 @@
+#!/bin/zsh
+set -eu
+repo=${0:A:h:h}
+export DYLD_FRAMEWORK_PATH='/Applications/OM Workspace.app/Contents/Frameworks'
+export DYLD_LIBRARY_PATH="$DYLD_FRAMEWORK_PATH"
+binary=${OMRENDER_BINARY:-$repo/.build/native/omrender}
+exec "$binary" "$@"

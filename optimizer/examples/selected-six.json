@@ -1,0 +1,82 @@
+{
+  "pairs": [
+    {
+      "id": "photo-01",
+      "raw": "photos/photo-01.ORF",
+      "target": "targets/photo-01.jpg",
+      "group": "look",
+      "role": "train",
+      "initial": [
+        53,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "photo-02",
+      "raw": "photos/photo-02.ORF",
+      "target": "targets/photo-02.jpg",
+      "group": "look",
+      "role": "train",
+      "initial": [
+        53,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "photo-03",
+      "raw": "photos/photo-03.ORF",
+      "target": "targets/photo-03.jpg",
+      "group": "look",
+      "role": "train",
+      "initial": [
+        53,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "photo-04",
+      "raw": "photos/photo-04.ORF",
+      "target": "targets/photo-04.jpg",
+      "group": "look",
+      "role": "train",
+      "initial": [
+        53,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "photo-05",
+      "raw": "photos/photo-05.ORF",
+      "target": "targets/photo-05.jpg",
+      "group": "look",
+      "role": "train",
+      "initial": [
+        53,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "photo-06",
+      "raw": "photos/photo-06.ORF",
+      "target": "targets/photo-06.jpg",
+      "group": "look",
+      "role": "validation",
+      "initial": [
+        53,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

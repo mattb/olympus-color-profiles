@@ -1,0 +1,17 @@
+{
+  "pairs": [
+    {
+      "id": "train-01",
+      "raw": "photos/train-01.ORF",
+      "target": "targets/train-01.jpg",
+      "group": "look",
+      "role": "train",
+      "initial": [
+        53,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}
